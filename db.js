@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { connect } from "mongoose";
+const connect = require("mongoose");
 
 const mongoUri = process.env.MONGO_DB_URL;
 
