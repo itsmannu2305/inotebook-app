@@ -200,4 +200,4 @@ router.patch(
   }
 );
 
-export default router;
+module.exports = router;
