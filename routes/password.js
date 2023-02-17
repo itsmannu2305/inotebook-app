@@ -118,7 +118,6 @@ router.post("/forgotpassword", async (req, res) => {
 //!ROUTES 2: Verify user for reset password : GET '/resetpassword/:id/:token'.
 router.get("/resetpassword/:id/:token", async (req, res) => {
   const { id, token } = req.params;
-  let success = false;
 
   try {
     // User Verify
@@ -128,10 +127,8 @@ router.get("/resetpassword/:id/:token", async (req, res) => {
     const validToken = jwt.verify(token, JWT_SECRET);
 
     if (validUser && validToken._id) {
-      success = true;
       res.status(200).json({ status: "200", validUser });
     } else {
-      success = false;
       res.status(500).json({ status: "500", message: "User does not exist" });
     }
   } catch (error) {
