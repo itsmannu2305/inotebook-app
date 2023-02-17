@@ -1,11 +1,11 @@
 require("dotenv").config();
-import { Router } from "express";
-import { findOne, create, findById } from "../models/Users";
-const router = Router();
-import { body, validationResult } from "express-validator";
-import { genSalt, hash, compare } from "bcrypt";
-import { sign } from "jsonwebtoken";
-import fetchuser from "../middleware/fetchuser";
+const express = require("express");
+const Users = require("../models/Users");
+const router = express.Router();
+const { body, validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
+var jwt = require("jsonwebtoken");
+const fetchuser = require("../middleware/fetchuser");
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
@@ -50,8 +50,8 @@ router.post(
       }
 
       // Create a secure password;
-      const salt = await genSalt(10);
-      const securePassword = await hash(req.body.password, salt);
+      const salt = await bcrypt.genSalt(10);
+      const securePassword = await bcrypt.hash(req.body.password, salt);
 
       // Create a user
       user = await create({
@@ -66,7 +66,7 @@ router.post(
           id: user.id,
         },
       };
-      const authtoken = sign(data, JWT_SECRET);
+      const authtoken = jwt.sign(data, JWT_SECRET);
       success = true;
       res.status(201).json({ success, authtoken });
     } catch (error) {
@@ -94,7 +94,7 @@ router.post(
     const { email, password } = req.body;
     try {
       // Find user exists or not for login with correct credetials
-      let user = await findOne({ email });
+      let user = await Users.findOne({ email });
       if (!user) {
         success = false;
         return res.status(400).json({
@@ -104,7 +104,7 @@ router.post(
       }
 
       // Check password is corect or not
-      const passwordCompare = await compare(password, user.password);
+      const passwordCompare = await bcrypt.compare(password, user.password);
       if (!passwordCompare) {
         success = false;
         return res.status(400).json({
@@ -119,7 +119,7 @@ router.post(
           id: user.id,
         },
       };
-      const authtoken = sign(data, JWT_SECRET);
+      const authtoken = jwt.sign(data, JWT_SECRET);
       success = true;
       res.json({ success, authtoken });
     } catch (error) {
@@ -133,7 +133,7 @@ router.post(
 router.post("/getuser", fetchuser, async (req, res) => {
   try {
     let userId = req.user.id;
-    const user = await findById(userId).select("-password");
+    const user = await Users.findById(userId).select("-password");
     res.send(user);
   } catch (error) {
     console.error(error);

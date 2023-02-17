@@ -1,12 +1,12 @@
 require("dotenv").config();
-import { Router } from "express";
-import { findOne, findByIdAndUpdate } from "../models/Users";
-const router = Router();
-import { body, validationResult } from "express-validator";
-import { genSalt, hash } from "bcrypt";
-import { sign, verify } from "jsonwebtoken";
-import { createTransport } from "nodemailer";
-import mailgen from "mailgen";
+const express = require("express");
+const Users = require("../models/Users");
+const router = express.Router();
+const { body, validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const mailgen = require("mailgen");
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 const BASE_URL = process.env.BASE_URL;
@@ -23,7 +23,7 @@ let config = {
   },
 };
 
-const transporter = createTransport(config);
+const transporter = nodemailer.createTransport(config);
 
 // Mail genrator
 const mailGenrator = new mailgen({
@@ -45,7 +45,7 @@ router.post("/forgotpassword", async (req, res) => {
   } else {
     try {
       // Find user exists or not for password reset link send with correct credetials
-      const validUser = await findOne({ email });
+      const validUser = await Users.findOne({ email });
 
       if (!validUser) {
         res
@@ -53,12 +53,12 @@ router.post("/forgotpassword", async (req, res) => {
           .json({ status: "401", message: "This user is not valid" });
       } else {
         //  Create token for verifing password reset link
-        const token = sign({ _id: validUser._id }, JWT_SECRET, {
+        const token = jwt.sign({ _id: validUser._id }, JWT_SECRET, {
           expiresIn: "120s",
         });
 
         //  Save token in database
-        let saveToken = await findByIdAndUpdate(
+        let saveToken = await Users.findByIdAndUpdate(
           { _id: validUser._id },
           { verifyToken: token },
           { new: true }
@@ -122,10 +122,10 @@ router.get("/resetpassword/:id/:token", async (req, res) => {
 
   try {
     // User Verify
-    const validUser = await findOne({ _id: id }, { verifyToken: token });
+    const validUser = await Users.findOne({ _id: id }, { verifyToken: token });
 
     // Verify Token
-    const validToken = verify(token, JWT_SECRET);
+    const validToken = jwt.verify(token, JWT_SECRET);
 
     if (validUser && validToken._id) {
       success = true;
@@ -168,21 +168,21 @@ router.patch(
 
     try {
       // User Verify
-      const validUser = await findOne(
+      const validUser = await Users.findOne(
         { _id: id },
         { verifyToken: token }
       );
 
       // Verify Token
-      const validToken = verify(token, JWT_SECRET);
+      const validToken = jwt.verify(token, JWT_SECRET);
 
       if (validUser && validToken._id) {
         // Create a secure password;
-        const salt = await genSalt(10);
-        const securePassword = await hash(password, salt);
+        const salt = await bcrypt.genSalt(10);
+        const securePassword = await bcrypt.hash(password, salt);
 
         // update password
-        const updatePassword = await findByIdAndUpdate(
+        const updatePassword = await Users.findByIdAndUpdate(
           { _id: id },
           { password: securePassword },
           { new: true }
