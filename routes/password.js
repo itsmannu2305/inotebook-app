@@ -54,7 +54,7 @@ router.post("/forgotpassword", async (req, res) => {
       } else {
         //  Create token for verifing password reset link
         const token = jwt.sign({ _id: validUser._id }, JWT_SECRET, {
-          expiresIn: "120s",
+          expiresIn: "300s",
         });
 
         //  Save token in database
@@ -129,10 +129,10 @@ router.get("/resetpassword/:id/:token", async (req, res) => {
 
     if (validUser && validToken._id) {
       success = true;
-      res.status(200).json({ status: 200, validUser });
+      res.status(200).json({ status: "200", validUser });
     } else {
       success = false;
-      res.status(500).json({ status: 500, message: "User does not exist" });
+      res.status(500).json({ status: "500", message: "User does not exist" });
     }
   } catch (error) {
     res.status(500).json({ error });
