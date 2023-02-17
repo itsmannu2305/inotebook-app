@@ -18,7 +18,7 @@ app.use("/api/notes", require("./routes/notes"));
 app.use("/", require("./routes/password"));
 
 //  Static Files for depoly
-app.use(express.static(path.join(--__dirname, "client/build")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
 app.get("*", function (req, res) {
   res.sendFile(path.join((__dirname, "./client/build/index.js")));
