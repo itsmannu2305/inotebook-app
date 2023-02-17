@@ -41,7 +41,7 @@ router.post(
 
     // Check wether the user with same email id then show bad response
     try {
-      let user = await findOne({ email: req.body.email });
+      let user = await Users.findOne({ email: req.body.email });
       if (user) {
         return res.status(400).json({
           success,
